@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Biano Games</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #080018, #16004a, #001d3d);
+    color: white;
+    overflow-x: hidden;
+}
+
+header {
+    text-align: center;
+    padding: 35px 20px 20px;
+}
+
+.logo {
+    font-size: 42px;
+    font-weight: 900;
+    background: linear-gradient(90deg, #00eaff, #9d4edd, #ff2cdf);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.subtitle {
+    color: #bbb;
+    margin-top: 8px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+}
+
+.stats {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.stat {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 12px 22px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.games {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 25px;
+    padding: 25px;
+    text-align: center;
+    transition: .3s;
+}
+
+.card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 0 30px rgba(0,220,255,.25);
+}
+
+.icon {
+    font-size: 55px;
+    margin-bottom: 15px;
+}
+
+.card h2 {
+    margin-bottom: 10px;
+}
+
+.card p {
+    color: #aaa;
+    margin-bottom: 20px;
+}
+
+button {
+    border: none;
+    padding: 13px 22px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #00c6ff, #7b2cff);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: .2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.gameArea {
+    display: none;
+    margin-top: 25px;
+    background: rgba(0,0,0,.35);
+    border-radius: 25px;
+    padding: 25px;
+    text-align: center;
+}
+
+.target {
+    width: 65px;
+    height: 65px;
+    background: #ff2cdf;
+    border-radius: 50%;
+    position: absolute;
+    cursor: pointer;
+    box-shadow: 0 0 25px #ff2cdf;
+}
+
+.arena {
+    height: 350px;
+    position: relative;
+    overflow: hidden;
+    margin-top: 20px;
+    border-radius: 20px;
+    background: rgba(255,255,255,.05);
+}
+
+.question {
+    font-size: 24px;
+    margin: 20px;
+}
+
+.answers {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.message {
+    margin-top: 20px;
+    font-size: 20px;
+}
+
+footer {
+    text-align: center;
+    padding: 40px;
+    color: #777;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">🎮 BIANO GAMES</div>
+    <div class="subtitle">Diversão, desafios e muita pontuação!</div>
+</header>
+
+<div class="container">
+
+    <div class="stats">
+        <div class="stat">🪙 Moedas: <b id="coins">0</b></div>
+        <div class="stat">🏆 Recorde: <b id="record">0</b></div>
+    </div>
+
+    <div class="games">
+
+        <div class="card">
+            <div class="icon">🎯</div>
+            <h2>Acerta o Alvo</h2>
+            <p>Clique no alvo o mais rápido possível!</p>
+            <button onclick="startTargetGame()">JOGAR</button>
+        </div>
+
+        <div class="card">
+            <div class="icon">🧠</div>
+            <h2>Quiz Rápido</h2>
+            <p>Teste seus conhecimentos.</p>
+            <button onclick="startQuiz()">JOGAR</button>
+        </div>
+
+        <div class="card">
+            <div class="icon">🪙</div>
+            <h2>Caça-Moedas</h2>
+            <p>Clique para ganhar moedas!</p>
+            <button onclick="collectCoin()">PEGAR MOEDA</button>
+        </div>
+
+    </div>
+
+    <div id="targetGame" class="gameArea">
+        <h2>🎯 Acerte o alvo!</h2>
+        <p>Tempo: <span id="time">10</span>s</p>
+        <div class="arena" id="arena"></div>
+        <div class="message" id="targetMessage"></div>
+    </div>
+
+    <div id="quizGame" class="gameArea">
+
+        <h2>🧠 Quiz Biano</h2>
+
+        <div class="question" id="question"></div>
+
+        <div class="answers" id="answers"></div>
+
+        <div class="message" id="quizMessage"></div>
+
+    </div>
+
+</div>
+
+<footer>
+    Biano Games © 2026 — Feito para se divertir 🚀
+</footer>
+
+<script>
+
+let coins = 0;
+let score = 0;
+let record = localStorage.getItem("bianoRecord") || 0;
+
+document.getElementById("record").innerText = record;
+
+
+// ===========================
+// MOEDAS
+// ===========================
+
+function collectCoin() {
+
+    coins += Math.floor(Math.random() * 10) + 1;
+
+    document.getElementById("coins").innerText = coins;
+
+    alert("🪙 Você ganhou moedas!");
+}
+
+
+// ===========================
+// JOGO DO ALVO
+// ===========================
+
+let targetScore = 0;
+let timer;
+
+function startTargetGame() {
+
+    document.getElementById("targetGame").style.display = "block";
+    document.getElementById("quizGame").style.display = "none";
+
+    targetScore = 0;
+
+    let time = 10;
+
+    document.getElementById("time").innerText = time;
+    document.getElementById("targetMessage").innerText = "";
+
+    moveTarget();
+
+    clearInterval(timer);
+
+    timer = setInterval(() => {
+
+        time--;
+
+        document.getElementById("time").innerText = time;
+
+        if(time <= 0) {
+
+            clearInterval(timer);
+
+            document.getElementById("targetMessage").innerText =
+            "🏆 Fim! Você fez " + targetScore + " pontos.";
+
+            if(targetScore > record) {
+
+                record = targetScore;
+
+                localStorage.setItem("bianoRecord", record);
+
+                document.getElementById("record").innerText = record;
+            }
+        }
+
+    }, 1000);
+}
+
+
+function moveTarget() {
+
+    let arena = document.getElementById("arena");
+
+    arena.innerHTML = "";
+
+    let target = document.createElement("div");
+
+    target.className = "target";
+
+    target.style.left =
+        Math.random() * (arena.clientWidth - 70) + "px";
+
+    target.style.top =
+        Math.random() * (arena.clientHeight - 70) + "px";
+
+    target.onclick = function() {
+
+        targetScore++;
+
+        coins++;
+
+        document.getElementById("coins").innerText = coins;
+
+        moveTarget();
+    };
+
+    arena.appendChild(target);
+}
+
+
+// ===========================
+// QUIZ
+// ===========================
+
+const questions = [
+
+    {
+        q: "Qual é o maior planeta do Sistema Solar?",
+        answers: ["Terra", "Júpiter", "Marte", "Vênus"],
+        correct: "Júpiter"
+    },
+
+    {
+        q: "Quanto é 10 + 15?",
+        answers: ["20", "25", "30", "35"],
+        correct: "25"
+    },
+
+    {
+        q: "Qual linguagem é usada para estruturar páginas web?",
+        answers: ["HTML", "Python", "C++", "Java"],
+        correct: "HTML"
+    },
+
+    {
+        q: "Qual animal é conhecido como o rei da selva?",
+        answers: ["Tigre", "Leão", "Lobo", "Urso"],
+        correct: "Leão"
+    }
+
+];
+
+let currentQuestion = 0;
+
+function startQuiz() {
+
+    document.getElementById("quizGame").style.display = "block";
+    document.getElementById("targetGame").style.display = "none";
+
+    currentQuestion = 0;
+
+    showQuestion();
+}
+
+
+function showQuestion() {
+
+    if(currentQuestion >= questions.length) {
+
+        document.getElementById("question").innerText =
+        "🎉 Você terminou o quiz!";
+
+        document.getElementById("answers").innerHTML = "";
+
+        return;
+    }
+
+    let q = questions[currentQuestion];
+
+    document.getElementById("question").innerText = q.q;
+
+    let answers = document.getElementById("answers");
+
+    answers.innerHTML = "";
+
+    q.answers.forEach(answer => {
+
+        let button = document.createElement("button");
+
+        button.innerText = answer;
+
+        button.onclick = () => checkAnswer(answer);
+
+        answers.appendChild(button);
+
+    });
+
+}
+
+
+function checkAnswer(answer) {
+
+    let q = questions[currentQuestion];
+
+    if(answer === q.correct) {
+
+        document.getElementById("quizMessage").innerText =
+        "✅ Acertou! +10 moedas";
+
+        coins += 10;
+
+    } else {
+
+        document.getElementById("quizMessage").innerText =
+        "❌ Errou! A resposta era " + q.correct;
+
+    }
+
+    document.getElementById("coins").innerText = coins;
+
+    currentQuestion++;
+
+    setTimeout(showQuestion, 900);
+}
+
+</script>
+
+</body>
+</html>
